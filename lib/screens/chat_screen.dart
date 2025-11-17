@@ -63,8 +63,6 @@ class _ChatScreenState extends State<ChatScreen> {
         messages: [],
       ),
     );
-    
-    _addWelcomeMessage();
   }
 
   @override
@@ -73,24 +71,6 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollController.dispose();
     _inputFocusNode.dispose();
     super.dispose();
-  }
-
-  void _addWelcomeMessage() {
-    final welcomeMsg = Message(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      type: MessageType.system,
-      content: '欢迎使用 Kimi Flutter Client',
-      timestamp: DateTime.now(),
-    );
-    
-    setState(() {
-      _messages.add(welcomeMsg);
-    });
-    
-    // 保存到数据库
-    if (_currentConversationId != null) {
-      _dbService.saveMessage(_currentConversationId!, welcomeMsg);
-    }
   }
 
   void _sendMessage() async {
@@ -246,7 +226,6 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.clear();
     });
     _permissionService.clearSessionPermissions();
-    _addWelcomeMessage();
   }
 
   /// 删除消息
@@ -386,17 +365,32 @@ class _ChatScreenState extends State<ChatScreen> {
 
   /// 建议Chip
   Widget _buildSuggestionChip(String text) {
-    return ActionChip(
-      label: Text(text),
-      onPressed: () {
-        _messageController.text = text;
-        _sendMessage();
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: 0.8 + (0.2 * value),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
       },
-      backgroundColor: AppTheme.cardBackground,
-      side: const BorderSide(color: AppTheme.borderColor),
-      labelStyle: const TextStyle(
-        color: AppTheme.textPrimary,
-        fontSize: 13,
+      child: ActionChip(
+        label: Text(text),
+        onPressed: () {
+          _messageController.text = text;
+          _sendMessage();
+        },
+        backgroundColor: AppTheme.cardBackground,
+        side: const BorderSide(color: AppTheme.borderColor),
+        labelStyle: const TextStyle(
+          color: AppTheme.textPrimary,
+          fontSize: 13,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }
@@ -491,9 +485,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    gradient: const LinearGradient(
-                      colors: [AppTheme.accentColor, Color(0xFF4A90E2)],
-                    ),
+                    color: AppTheme.accentColor,
                   ),
                   child: const Icon(
                     Icons.auto_awesome,
@@ -583,7 +575,7 @@ class _ChatScreenState extends State<ChatScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 20,
             offset: const Offset(0, -2),
           ),
@@ -606,6 +598,35 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                // 附件按钮
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBackground,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppTheme.borderColor,
+                      width: 1,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _showAttachmentMenu,
+                      borderRadius: BorderRadius.circular(10),
+                      child: const Icon(
+                        Icons.add_rounded,
+                        color: AppTheme.textSecondary,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                
+                // 输入框
                 Expanded(
                   child: Container(
                     constraints: const BoxConstraints(maxHeight: 120),
@@ -637,30 +658,22 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                
                 // 圆角方形发送按钮
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    gradient: _isLoading || _messageController.text.isEmpty
-                        ? null
-                        : const LinearGradient(
-                            colors: [
-                              AppTheme.accentColor,
-                              Color(0xFF4A90E2),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
                     color: _isLoading || _messageController.text.isEmpty
                         ? AppTheme.dividerColor
-                        : null,
+                        : AppTheme.accentColor,
                     boxShadow: _messageController.text.isNotEmpty && !_isLoading
                         ? [
                             BoxShadow(
-                              color: AppTheme.accentColor.withOpacity(0.3),
+                              color: AppTheme.accentColor.withOpacity(0.25),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -675,9 +688,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           : _sendMessage,
                       borderRadius: BorderRadius.circular(12),
                       child: Icon(
-                        _isLoading ? Icons.stop_rounded : Icons.send_rounded,
+                        _isLoading ? Icons.stop_rounded : Icons.arrow_upward_rounded,
                         color: Colors.white,
-                        size: 20,
+                        size: 22,
                       ),
                     ),
                   ),
@@ -687,6 +700,125 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
       ),
+    );
+  }
+  
+  /// 附件菜单
+  void _showAttachmentMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.cardBackground,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // 选项列表
+              ListTile(
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_outlined,
+                    color: AppTheme.accentColor,
+                  ),
+                ),
+                title: const Text('拍照'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickCamera();
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.photo_library_outlined,
+                    color: AppTheme.accentColor,
+                  ),
+                ),
+                title: const Text('图片'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage();
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.insert_drive_file_outlined,
+                    color: AppTheme.accentColor,
+                  ),
+                ),
+                title: const Text('文件'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickFile();
+                },
+              ),
+              
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  /// 拍照
+  Future<void> _pickCamera() async {
+    // TODO: 实现相机拍照
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('相机功能待实现')),
+    );
+  }
+  
+  /// 选择图片
+  Future<void> _pickImage() async {
+    // TODO: 实现图片选择
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('图片选择功能待实现')),
+    );
+  }
+  
+  /// 选择文件
+  Future<void> _pickFile() async {
+    // TODO: 实现文件选择
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('文件选择功能待实现')),
     );
   }
 }
