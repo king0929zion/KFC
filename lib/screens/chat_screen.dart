@@ -208,43 +208,6 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  void _handleQuickCommand(String command) {
-    switch (command) {
-      case '/clear':
-        _clearMessages();
-        break;
-      case '/setup':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const McpConfigScreen()),
-        );
-        break;
-      case '/history':
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ConversationHistoryScreen(
-              onConversationSelected: (id) {
-                // TODO: 加载选中的会话
-              },
-            ),
-          ),
-        );
-        break;
-      case '/help':
-        _showHelpDialog();
-        break;
-      case '/settings':
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const SettingsScreen()),
-        );
-        break;
-      default:
-        _messageController.text = command;
-    }
-  }
-
   void _showHelpDialog() {
     showDialog(
       context: context,
