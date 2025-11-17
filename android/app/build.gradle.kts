@@ -79,12 +79,12 @@ chaquopy {
         version = "3.13"
         buildPython("python3")
         pip {
-            // kimi-cli 的所有依赖包
+            // kimi-cli 的所有依赖包 (使用兼容Python 3.12的版本)
             install("agent-client-protocol==0.6.3")
             install("aiofiles==25.1.0")
             install("aiohttp==3.13.2")
             install("typer==0.20.0")
-            install("kosong==0.25.0")
+            install("kosong==0.24.0")  // 使用0.24.0兼容Python 3.12
             install("loguru==0.7.3")
             install("patch-ng==1.19.0")
             install("prompt-toolkit==3.0.52")
