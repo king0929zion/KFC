@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -45,10 +48,10 @@ android {
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
             }
         }
     }
@@ -74,20 +77,15 @@ chaquopy {
     defaultConfig {
         version = "3.13"
         
-        // Python 构建选项
-        buildPython "python3"
+        buildPython("python3")
         
         pip {
-            // 基础依赖包
-            install "requests"
-            install "python-dateutil"
-            // TODO: 后续集成完整 kimi-cli
-            // install "kimi-cli"
+            install("requests")
+            install("python-dateutil")
         }
         
-        // 启用 Python 标准库
         pyc {
-            src = false  // 不编译为字节码,方便调试
+            src = false
         }
     }
     
