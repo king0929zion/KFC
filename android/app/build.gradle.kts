@@ -77,24 +77,9 @@ flutter {
 chaquopy {
     defaultConfig {
         version = "3.11"
-        
         buildPython("python3")
-        
         pip {
             install("requests")
-            install("python-dateutil")
-        }
-        
-        pyc {
-            src = false
-        }
-    }
-    
-    productFlavors { }
-    
-    sourceSets {
-        getByName("main") {
-            srcDir("src/main/python")
         }
     }
 }
