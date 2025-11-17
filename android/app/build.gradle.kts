@@ -79,25 +79,21 @@ chaquopy {
         version = "3.13"
         buildPython("python3")
         pip {
-            // kimi-cli 的所有依赖包 (使用兼容Python 3.12的版本)
-            install("agent-client-protocol==0.6.3")
-            install("aiofiles==25.1.0")
-            install("aiohttp==3.13.2")
-            install("typer==0.20.0")
-            install("kosong==0.23.0")  // 使用0.23.0兼容Python 3.12
-            install("loguru==0.7.3")
-            install("patch-ng==1.19.0")
-            install("prompt-toolkit==3.0.52")
-            install("pillow==12.0.0")
-            install("pyyaml==6.0.3")
-            install("rich==14.2.0")
-            install("ripgrepy==2.2.0")
-            install("streamingjson==0.0.5")
-            install("trafilatura==2.0.0")
-            install("tenacity==9.1.2")
-            install("fastmcp==2.12.5")
-            install("pydantic==2.12.4")
-            install("httpx[socks]==0.28.1")
+            // 核心依赖包(使用灵活版本以兼容Python 3.12.3)
+            install("aiohttp>=3.9.0,<4.0")
+            install("aiofiles>=23.0.0")
+            install("httpx[socks]>=0.27.0")
+            install("pydantic>=2.0.0,<3.0")
+            install("loguru>=0.7.0")
+            install("pyyaml>=6.0.0")
+            install("rich>=13.0.0")
+            install("typer>=0.12.0")
+            install("tenacity>=8.0.0")
+            install("pillow>=10.0.0")
+            install("prompt-toolkit>=3.0.0")
+            // 可选:如果需要特定功能再添加
+            // install("fastmcp>=2.0.0")
+            // install("trafilatura>=2.0.0")
         }
     }
 }
