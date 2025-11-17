@@ -172,8 +172,8 @@ class _ChatScreenState extends State<ChatScreen> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
         );
       }
     });
@@ -640,6 +640,11 @@ class _ChatScreenState extends State<ChatScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      transitionAnimationController: AnimationController(
+        vsync: Navigator.of(context),
+        duration: const Duration(milliseconds: 400),
+      ),
       builder: (context) => Container(
         decoration: const BoxDecoration(
           color: AppTheme.cardBackground,
@@ -664,58 +669,25 @@ class _ChatScreenState extends State<ChatScreen> {
               const SizedBox(height: 16),
               
               // 选项列表
-              ListTile(
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_outlined,
-                    color: AppTheme.accentColor,
-                  ),
-                ),
-                title: const Text('拍照'),
+              _buildAttachmentOption(
+                icon: Icons.camera_alt_outlined,
+                title: '拍照',
                 onTap: () {
                   Navigator.pop(context);
                   _pickCamera();
                 },
               ),
-              ListTile(
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.photo_library_outlined,
-                    color: AppTheme.accentColor,
-                  ),
-                ),
-                title: const Text('图片'),
+              _buildAttachmentOption(
+                icon: Icons.photo_library_outlined,
+                title: '图片',
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage();
                 },
               ),
-              ListTile(
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.insert_drive_file_outlined,
-                    color: AppTheme.accentColor,
-                  ),
-                ),
-                title: const Text('文件'),
+              _buildAttachmentOption(
+                icon: Icons.insert_drive_file_outlined,
+                title: '文件',
                 onTap: () {
                   Navigator.pop(context);
                   _pickFile();
@@ -723,6 +695,46 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               
               const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildAttachmentOption({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppTheme.accentColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: AppTheme.accentColor,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
             ],
           ),
         ),
