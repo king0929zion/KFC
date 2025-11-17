@@ -34,19 +34,11 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = false;
   String? _currentConversationId;
   StreamMessage? _streamingMessage; // 当前流式消息
-  double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
     _initConversation();
-    _scrollController.addListener(_onScroll);
-  }
-  
-  void _onScroll() {
-    setState(() {
-      _scrollOffset = _scrollController.offset;
-    });
   }
 
   Future<void> _initConversation() async {
@@ -233,52 +225,36 @@ class _ChatScreenState extends State<ChatScreen> {
               
               // 消息列表
               Expanded(
-                child: _messages.isEmpty
-                    ? EmptyState(
-                        icon: Icons.chat_bubble_outline,
-                        title: '开始对话',
-                        subtitle: '试试问我任何问题',
-                        action: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: [
-                            _buildSuggestionChip('写一段Python代码'),
-                            _buildSuggestionChip('分析这个项目'),
-                            _buildSuggestionChip('帮我查找问题'),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.only(top: 16, bottom: 100, left: 8, right: 8),
-                        itemCount: _messages.length + 
-                            (_streamingMessage != null ? 1 : 0) + 
-                            (_isLoading ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          // 显示加载指示器
-                          if (_isLoading && index == _messages.length) {
-                            return _buildLoadingIndicator();
-                          }
-                          
-                          // 显示流式消息
-                          if (_streamingMessage != null && 
-                              index == _messages.length) {
-                            return StreamMessageBubble(message: _streamingMessage!);
-                          }
-                          
-                          // 显示普通消息
-                          final msg = _messages[index];
-                          return MessageBubble(
-                            message: msg,
-                            onDelete: () => _deleteMessage(index),
-                            onCopy: () => _copyMessage(msg.content),
-                            onRetry: msg.type == MessageType.user 
-                                ? () => _retryMessage(msg.content)
-                                : null,
-                          );
-                        },
-                      ),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.only(top: 16, bottom: 100, left: 8, right: 8),
+                  itemCount: _messages.length + 
+                      (_streamingMessage != null ? 1 : 0) + 
+                      (_isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    // 显示加载指示器
+                    if (_isLoading && index == _messages.length) {
+                      return _buildLoadingIndicator();
+                    }
+                    
+                    // 显示流式消息
+                    if (_streamingMessage != null && 
+                        index == _messages.length) {
+                      return StreamMessageBubble(message: _streamingMessage!);
+                    }
+                    
+                    // 显示普通消息
+                    final msg = _messages[index];
+                    return MessageBubble(
+                      message: msg,
+                      onDelete: () => _deleteMessage(index),
+                      onCopy: () => _copyMessage(msg.content),
+                      onRetry: msg.type == MessageType.user 
+                          ? () => _retryMessage(msg.content)
+                          : null,
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -356,9 +332,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   /// 自定义顶部栏
   Widget _buildCustomAppBar() {
-    // 计算渐变透明度，最多滚动100像素就完全透明
-    final opacity = (_scrollOffset / 100).clamp(0.0, 1.0);
-    
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 4,
@@ -366,11 +339,11 @@ class _ChatScreenState extends State<ChatScreen> {
         right: 16,
         bottom: 4,
       ),
-      decoration: BoxDecoration(
-        color: AppTheme.primaryBackground.withOpacity(opacity),
+      decoration: const BoxDecoration(
+        color: AppTheme.primaryBackground,
         border: Border(
           bottom: BorderSide(
-            color: AppTheme.dividerColor.withOpacity(opacity),
+            color: AppTheme.dividerColor,
             width: 0.5,
           ),
         ),
@@ -593,7 +566,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _messageController,
                       focusNode: _inputFocusNode,
                       decoration: const InputDecoration(
-                        hintText: '输入消息...',
+                        hintText: '哈啦...',
                         hintStyle: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 15,
