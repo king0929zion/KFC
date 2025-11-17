@@ -31,9 +31,9 @@ class KimiBridge:
     def __init__(self):
         self._kimi: Optional[KimiCLI] = None
         self._session: Optional[Session] = None
-        self._session_id: Optional[str] = None
         self._work_dir: Path = Path("/data/data/com.kimi.kfc.kfc/files/workspace")
-        self._work_dir.mkdir(parents=True, exist_ok=True)
+        self._approval_callback: Optional[Callable] = None
+        self._current_tool: Optional[str] = None
     
     async def initialize(
         self,
@@ -41,16 +41,30 @@ class KimiBridge:
         api_key: str = "",
         base_url: str = "",
         model_name: str = "",
+        session_id: str = "",
     ) -> Dict[str, Any]:
         """
-        初始化完整的 Kimi CLI 实例
+        Initialize complete Kimi CLI instance with sandbox workspace
+        Each session has its own isolated workspace directory
         """
         try:
+            # Use provided workspace or create default
             if work_dir:
                 self._work_dir = Path(work_dir)
-                self._work_dir.mkdir(parents=True, exist_ok=True)
+            else:
+                # Create session-specific workspace
+                base_path = Path("/data/data/com.kimi.kfc.kfc/files/sessions")
+                base_path.mkdir(parents=True, exist_ok=True)
+                
+                if session_id:
+                    self._work_dir = base_path / session_id / "workspace"
+                else:
+                    timestamp = int(datetime.now().timestamp())
+                    self._work_dir = base_path / str(timestamp) / "workspace"
             
-            # 设置环境变量
+            self._work_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Set environment variables for API access
             if api_key:
                 os.environ['OPENAI_API_KEY'] = api_key
             if base_url:
@@ -74,7 +88,7 @@ class KimiBridge:
                 "success": True,
                 "session_id": self._session.id,
                 "work_dir": str(self._work_dir),
-                "message": "Kimi CLI 初始化成功",
+                "message": "Kimi CLI initialized successfully",
                 "model": self._kimi.soul.model_name if self._kimi else None,
             }
             
@@ -82,7 +96,7 @@ class KimiBridge:
             return {
                 "success": False,
                 "error": str(e),
-                "message": f"初始化失败: {e}",
+                "message": f"Initialization failed: {e}",
             }
     
     async def send_message(self, message: str) -> Dict[str, Any]:
