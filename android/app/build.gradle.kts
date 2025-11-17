@@ -84,7 +84,7 @@ chaquopy {
             install("aiofiles==25.1.0")
             install("aiohttp==3.13.2")
             install("typer==0.20.0")
-            install("kosong==0.24.0")  // 使用0.24.0兼容Python 3.12
+            install("kosong==0.23.0")  // 使用0.23.0兼容Python 3.12
             install("loguru==0.7.3")
             install("patch-ng==1.19.0")
             install("prompt-toolkit==3.0.52")
