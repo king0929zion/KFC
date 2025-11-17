@@ -48,14 +48,6 @@ class AppTheme {
       ),
       
       // Card 主题
-      cardTheme: CardThemeData(
-        color: cardBackground,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: borderColor, width: 1),
-        ),
-      ),
       
       // 输入框主题
       inputDecorationTheme: InputDecorationTheme(
