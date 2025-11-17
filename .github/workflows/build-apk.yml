@@ -54,9 +54,9 @@ jobs:
     - name: Build APK
       run: |
         flutter clean
-        flutter build apk --release --target-platform android-arm64 --verbose
+        flutter build apk --release --target-platform android-arm64
       env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=2
+        GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2048m
       
     - name: Build App Bundle
       run: flutter build appbundle --release
