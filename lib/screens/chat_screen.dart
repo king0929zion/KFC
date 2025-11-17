@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kfc/config/theme.dart';
@@ -24,18 +26,28 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final List<Message> _messages = [];
   final PermissionService _permissionService = PermissionService();
   final DatabaseService _dbService = DatabaseService();
+  final FocusNode _inputFocusNode = FocusNode();
   
   bool _isLoading = false;
   String? _currentConversationId;
   StreamMessage? _streamingMessage; // 当前流式消息
+  double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
     _initConversation();
+    _scrollController.addListener(_onScroll);
+  }
+  
+  void _onScroll() {
+    setState(() {
+      _scrollOffset = _scrollController.offset;
+    });
   }
 
   Future<void> _initConversation() async {
@@ -59,6 +71,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _inputFocusNode.dispose();
     super.dispose();
   }
 
@@ -307,94 +320,75 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kimi'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ConversationHistoryScreen(
-                    onConversationSelected: (id) {
-                      // TODO: 加载选中的会话
-                    },
-                  ),
-                ),
-              );
-            },
-            tooltip: '会话历史',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const McpConfigScreen()),
-              );
-            },
-            tooltip: '设置',
-          ),
-        ],
-      ),
-      body: Column(
+      key: _scaffoldKey,
+      drawer: _buildDrawer(),
+      body: Stack(
         children: [
-          // 消息列表
-          Expanded(
-            child: _messages.isEmpty
-                ? EmptyState(
-                    icon: Icons.chat_bubble_outline,
-                    title: '开始对话',
-                    subtitle: '试试问我任何问题,或者使用下方的快捷命令',
-                    action: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        _buildSuggestionChip('写一段Python代码'),
-                        _buildSuggestionChip('分析这个项目'),
-                        _buildSuggestionChip('帮我查找问题'),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    itemCount: _messages.length + 
-                        (_streamingMessage != null ? 1 : 0) + 
-                        (_isLoading ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      // 显示加载指示器
-                      if (_isLoading && index == _messages.length) {
-                        return _buildLoadingIndicator();
-                      }
-                      
-                      // 显示流式消息
-                      if (_streamingMessage != null && 
-                          index == _messages.length) {
-                        return StreamMessageBubble(message: _streamingMessage!);
-                      }
-                      
-                      // 显示普通消息
-                      final msg = _messages[index];
-                      return MessageBubble(
-                        message: msg,
-                        onDelete: () => _deleteMessage(index),
-                        onCopy: () => _copyMessage(msg.content),
-                        onRetry: msg.type == MessageType.user 
-                            ? () => _retryMessage(msg.content)
-                            : null,
-                      );
-                    },
-                  ),
+          // 主内容区
+          Column(
+            children: [
+              // 自定义顶部栏
+              _buildCustomAppBar(),
+              
+              // 消息列表
+              Expanded(
+                child: _messages.isEmpty
+                    ? EmptyState(
+                        icon: Icons.chat_bubble_outline,
+                        title: '开始对话',
+                        subtitle: '试试问我任何问题',
+                        action: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            _buildSuggestionChip('写一段Python代码'),
+                            _buildSuggestionChip('分析这个项目'),
+                            _buildSuggestionChip('帮我查找问题'),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.only(top: 16, bottom: 100, left: 8, right: 8),
+                        itemCount: _messages.length + 
+                            (_streamingMessage != null ? 1 : 0) + 
+                            (_isLoading ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          // 显示加载指示器
+                          if (_isLoading && index == _messages.length) {
+                            return _buildLoadingIndicator();
+                          }
+                          
+                          // 显示流式消息
+                          if (_streamingMessage != null && 
+                              index == _messages.length) {
+                            return StreamMessageBubble(message: _streamingMessage!);
+                          }
+                          
+                          // 显示普通消息
+                          final msg = _messages[index];
+                          return MessageBubble(
+                            message: msg,
+                            onDelete: () => _deleteMessage(index),
+                            onCopy: () => _copyMessage(msg.content),
+                            onRetry: msg.type == MessageType.user 
+                                ? () => _retryMessage(msg.content)
+                                : null,
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
           
-          // 快捷命令栏
-          _buildQuickCommands(),
-          
-          // 输入框
-          _buildInputArea(),
+          // 输入框悬浮在底部
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildFloatingInputArea(),
+          ),
         ],
       ),
     );
@@ -444,181 +438,291 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  /// 快捷命令栏
-  Widget _buildQuickCommands() {
-    final commands = [
-      {'label': '/setup', 'icon': Icons.extension, 'color': Colors.purple},
-      {'label': '/settings', 'icon': Icons.settings, 'color': Colors.blue},
-      {'label': '/history', 'icon': Icons.history, 'color': Colors.orange},
-      {'label': '/clear', 'icon': Icons.clear_all, 'color': Colors.red},
-      {'label': '/help', 'icon': Icons.help_outline, 'color': Colors.green},
-    ];
-
+  /// 自定义顶部栏
+  Widget _buildCustomAppBar() {
+    // 计算渐变透明度，最多滚动100像素就完全透明
+    final opacity = (_scrollOffset / 100).clamp(0.0, 1.0);
+    
     return Container(
-      height: 56,
-      decoration: const BoxDecoration(
-        color: AppTheme.cardBackground,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 4,
+        left: 4,
+        right: 16,
+        bottom: 4,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryBackground.withOpacity(opacity),
         border: Border(
-          top: BorderSide(color: AppTheme.dividerColor, width: 0.5),
+          bottom: BorderSide(
+            color: AppTheme.dividerColor.withOpacity(opacity),
+            width: 0.5,
+          ),
         ),
       ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        itemCount: commands.length,
-        itemBuilder: (context, index) {
-          final cmd = commands[index];
-          final color = cmd['color'] as Color;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _handleQuickCommand(cmd['label'] as String),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: color.withOpacity(0.3),
-                      width: 1,
-                    ),
-                    gradient: LinearGradient(
-                      colors: [
-                        color.withOpacity(0.1),
-                        color.withOpacity(0.05),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        cmd['icon'] as IconData, 
-                        size: 18, 
-                        color: color,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        cmd['label'] as String,
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+      child: Row(
+        children: [
+          // 三条杠菜单按钮
+          IconButton(
+            icon: const Icon(Icons.menu, size: 24),
+            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            tooltip: '菜单',
+          ),
+          
+          // KFC 文字
+          const SizedBox(width: 4),
+          const Text(
+            'KFC',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+              letterSpacing: 0.5,
             ),
-          );
-        },
+          ),
+          
+          const Spacer(),
+          
+          // 新建对话按钮
+          IconButton(
+            icon: const Icon(Icons.edit_note_outlined, size: 24),
+            onPressed: _newConversation,
+            tooltip: '新建对话',
+          ),
+        ],
       ),
     );
   }
-
-  /// 输入区域
-  Widget _buildInputArea() {
+  
+  /// 新建对话
+  void _newConversation() {
+    setState(() {
+      _messages.clear();
+      _streamingMessage = null;
+      _isLoading = false;
+    });
+    _initConversation();
+  }
+  
+  /// 侧边栏抽屉
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Column(
+        children: [
+          // 头部
+          Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 20,
+              right: 20,
+              bottom: 16,
+            ),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppTheme.dividerColor),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    gradient: const LinearGradient(
+                      colors: [AppTheme.accentColor, Color(0xFF4A90E2)],
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  '历史记录',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // 历史记录列表
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.history, size: 20),
+                  title: const Text('今天'),
+                  dense: true,
+                  onTap: () {},
+                ),
+                ListTile(
+                  leading: const Icon(Icons.chat_bubble_outline, size: 20),
+                  title: const Text('新会话'),
+                  dense: true,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _newConversation();
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.folder_outlined, size: 20),
+                  title: const Text('查看全部历史'),
+                  dense: true,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ConversationHistoryScreen(
+                          onConversationSelected: (id) {
+                            // TODO: 加载选中的会话
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          // 底部设置按钮
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('设置'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
+      ),
+    );
+  }
+  
+  /// 悬浮输入框
+  Widget _buildFloatingInputArea() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 16),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
-            offset: const Offset(0, -4),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 120),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryBackground,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: _messageController.text.isNotEmpty 
-                      ? AppTheme.accentColor.withOpacity(0.5)
-                      : AppTheme.borderColor,
-                  width: 1.5,
-                ),
-              ),
-              child: TextField(
-                controller: _messageController,
-                decoration: const InputDecoration(
-                  hintText: '输入消息...',
-                  hintStyle: TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 15,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                ),
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                onSubmitted: (_) => _sendMessage(),
-                onChanged: (_) => setState(() {}), // 更新边框颜色
-                style: const TextStyle(
-                  fontSize: 15,
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 48,
-            height: 48,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              gradient: _isLoading || _messageController.text.isEmpty
-                  ? null
-                  : LinearGradient(
-                      colors: [
-                        AppTheme.accentColor,
-                        AppTheme.accentColor.withOpacity(0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-              color: _isLoading || _messageController.text.isEmpty
-                  ? AppTheme.dividerColor
-                  : null,
-              shape: BoxShape.circle,
-              boxShadow: _messageController.text.isNotEmpty && !_isLoading
-                  ? [
-                      BoxShadow(
-                        color: AppTheme.accentColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: IconButton(
-              icon: Icon(
-                _isLoading ? Icons.stop_circle_outlined : Icons.send_rounded,
-                color: Colors.white,
-                size: 22,
+              color: AppTheme.cardBackground.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppTheme.borderColor.withOpacity(0.5),
+                width: 1,
               ),
-              onPressed: _isLoading || _messageController.text.isEmpty 
-                  ? null 
-                  : _sendMessage,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Container(
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: TextField(
+                      controller: _messageController,
+                      focusNode: _inputFocusNode,
+                      decoration: const InputDecoration(
+                        hintText: '输入消息...',
+                        hintStyle: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 15,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                      ),
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.newline,
+                      onSubmitted: (_) => _sendMessage(),
+                      onChanged: (_) => setState(() {}),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // 圆角方形发送按钮
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: _isLoading || _messageController.text.isEmpty
+                        ? null
+                        : const LinearGradient(
+                            colors: [
+                              AppTheme.accentColor,
+                              Color(0xFF4A90E2),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    color: _isLoading || _messageController.text.isEmpty
+                        ? AppTheme.dividerColor
+                        : null,
+                    boxShadow: _messageController.text.isNotEmpty && !_isLoading
+                        ? [
+                            BoxShadow(
+                              color: AppTheme.accentColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isLoading || _messageController.text.isEmpty 
+                          ? null 
+                          : _sendMessage,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Icon(
+                        _isLoading ? Icons.stop_rounded : Icons.send_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

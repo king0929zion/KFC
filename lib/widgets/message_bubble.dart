@@ -134,28 +134,6 @@ class _MessageBubbleState extends State<MessageBubble>
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // AI 头像
-          Container(
-            width: 32,
-            height: 32,
-            margin: const EdgeInsets.only(right: 8, top: 2),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.accentColor.withOpacity(0.8),
-                  AppTheme.accentColor,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.auto_awesome,
-              size: 18,
-              color: Colors.white,
-            ),
-          ),
           Flexible(
             child: GestureDetector(
               onLongPress: () => _showMessageMenu(context),
