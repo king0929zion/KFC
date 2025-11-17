@@ -11,7 +11,6 @@ import 'package:kfc/widgets/empty_state.dart';
 import 'package:kfc/services/python_bridge_service.dart';
 import 'package:kfc/services/permission_service.dart';
 import 'package:kfc/services/database_service.dart';
-import 'package:kfc/screens/mcp_config_screen.dart';
 import 'package:kfc/screens/conversation_history_screen.dart';
 import 'package:kfc/screens/settings_screen.dart';
 
@@ -186,46 +185,6 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     });
-  }
-
-  void _showHelpDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('帮助'),
-        content: const SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '快捷命令',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: 8),
-              Text('/setup - 配置 MCP 服务器'),
-              Text('/settings - API 设置'),
-              Text('/clear - 清空当前会话'),
-              Text('/history - 查看会话历史'),
-              Text('/help - 显示帮助信息'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _clearMessages() {
-    setState(() {
-      _messages.clear();
-    });
-    _permissionService.clearSessionPermissions();
   }
 
   /// 删除消息
