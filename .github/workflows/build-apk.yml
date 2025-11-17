@@ -30,7 +30,10 @@ jobs:
         channel: 'stable'
         
     - name: Get dependencies
-      run: flutter pub get
+      run: |
+        flutter doctor -v
+        flutter pub get
+        flutter pub get --offline || true
       
     - name: Generate keystore
       run: |
@@ -49,7 +52,11 @@ jobs:
         echo "storeFile=upload-keystore.jks" >> ${{ github.workspace }}/android/key.properties
         
     - name: Build APK
-      run: flutter build apk --release --split-per-abi
+      run: |
+        flutter clean
+        flutter build apk --release --target-platform android-arm64 --verbose
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=2
       
     - name: Build App Bundle
       run: flutter build appbundle --release
@@ -63,11 +70,9 @@ jobs:
     - name: Upload APK artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: kfc-apk-${{ steps.version.outputs.version }}
-        path: |
-          build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-          build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-          build/app/outputs/flutter-apk/app-x86_64-release.apk
+        name: kfc-apk-arm64-v8a-${{ steps.version.outputs.version }}
+        path: build/app/outputs/flutter-apk/app-release.apk
+        retention-days: 30
           
     - name: Upload App Bundle
       uses: actions/upload-artifact@v4
@@ -80,12 +85,25 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-          build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-          build/app/outputs/flutter-apk/app-x86_64-release.apk
+          build/app/outputs/flutter-apk/app-release.apk
           build/app/outputs/bundle/release/app-release.aab
         draft: false
         prerelease: false
         generate_release_notes: true
+        name: KFC ${{ github.ref_name }}
+        body: |
+          ## KFC - Kimi Flutter Client Release
+          
+          ### 架构支持
+          - ARM64 (arm64-v8a) - 适用于主流64位Android手机
+          
+          ### 安装说明
+          1. 下载 `app-release.apk`
+          2. 在Android设备上安装
+          3. 允许未知来源安装
+          
+          ### 系统要求
+          - Android 7.0 (API 24) 或更高版本
+          - ARM64架构处理器
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -622,4 +622,57 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+
+  /// 复制消息
+  void _copyMessage(String content) {
+    Clipboard.setData(ClipboardData(text: content));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('已复制'),
+        duration: Duration(seconds: 1),
+        backgroundColor: AppTheme.successColor,
+      ),
+    );
+  }
+
+  /// 删除消息
+  void _deleteMessage(int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除消息'),
+        content: const Text('确定要删除这条消息吗?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _messages.removeAt(index);
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('已删除'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.errorText,
+            ),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 重试发送消息
+  void _retryMessage(String content) {
+    _messageController.text = content;
+    _sendMessage();
+  }
 }
