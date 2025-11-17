@@ -20,7 +20,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     _WelcomePage(
       icon: Icons.auto_awesome,
       title: '欢迎使用 KFC',
-      description: 'Kimi Flutter Client\n为您带来强大的 AI 编程助手体验',
+      description: 'KFC\n为您带来强大的 AI 编程助手体验',
     ),
     _WelcomePage(
       icon: Icons.chat_bubble_outline,

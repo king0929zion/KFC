@@ -76,10 +76,28 @@ flutter {
 
 chaquopy {
     defaultConfig {
-        version = "3.11"
+        version = "3.13"
         buildPython("python3")
         pip {
-            install("requests")
+            // kimi-cli 的所有依赖包
+            install("agent-client-protocol==0.6.3")
+            install("aiofiles==25.1.0")
+            install("aiohttp==3.13.2")
+            install("typer==0.20.0")
+            install("kosong==0.25.0")
+            install("loguru==0.7.3")
+            install("patch-ng==1.19.0")
+            install("prompt-toolkit==3.0.52")
+            install("pillow==12.0.0")
+            install("pyyaml==6.0.3")
+            install("rich==14.2.0")
+            install("ripgrepy==2.2.0")
+            install("streamingjson==0.0.5")
+            install("trafilatura==2.0.0")
+            install("tenacity==9.1.2")
+            install("fastmcp==2.12.5")
+            install("pydantic==2.12.4")
+            install("httpx[socks]==0.28.1")
         }
     }
 }

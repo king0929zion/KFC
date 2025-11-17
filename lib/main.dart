@@ -18,7 +18,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'KFC - Kimi Flutter Client',
+      title: 'KFC',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
@@ -92,7 +92,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Kimi Flutter Client',
+              'KFC',
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,

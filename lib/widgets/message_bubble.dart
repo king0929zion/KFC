@@ -4,6 +4,7 @@ import 'package:kfc/config/theme.dart';
 import 'package:kfc/models/message.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/github.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 /// 消息气泡组件
 class MessageBubble extends StatefulWidget {
@@ -126,7 +127,7 @@ class _MessageBubbleState extends State<MessageBubble>
     );
   }
 
-  /// AI消息 - 左对齐纯文本
+  /// AI消息 - 左对齐纯Markdown文本
   Widget _buildAssistantMessage(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -137,15 +138,24 @@ class _MessageBubbleState extends State<MessageBubble>
           Flexible(
             child: GestureDetector(
               onLongPress: () => _showMessageMenu(context),
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                child: SelectableText(
-                  widget.message.content,
-                  style: const TextStyle(
+              child: MarkdownBody(
+                data: widget.message.content,
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(
                     color: AppTheme.textPrimary,
                     fontSize: 15,
                     height: 1.5,
                   ),
+                  code: const TextStyle(
+                    backgroundColor: AppTheme.codeBackground,
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                  ),
+                  codeblockDecoration: BoxDecoration(
+                    color: AppTheme.codeBackground,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  codeblockPadding: const EdgeInsets.all(12),
                 ),
               ),
             ),
