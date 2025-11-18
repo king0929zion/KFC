@@ -163,40 +163,40 @@ class _ToolCallCardState extends State<ToolCallCard>
     IconData iconData;
     Color iconColor;
 
-    switch (widget.toolName.toLowerCase()) {
-      case 'bash':
-      case 'cmd':
+    final name = widget.toolName;
+    switch (name) {
+      case 'Bash':
+      case 'CMD':
         iconData = Icons.terminal;
         iconColor = const Color(0xFF2E7D32);
         break;
-      case 'file_read':
-      case 'file_write':
-      case 'file_edit':
+      case 'ReadFile':
+      case 'WriteFile':
+      case 'StrReplaceFile':
+      case 'PatchFile':
+      case 'Glob':
+      case 'Grep':
         iconData = Icons.description;
         iconColor = const Color(0xFF1976D2);
         break;
-      case 'web_search':
+      case 'SearchWeb':
         iconData = Icons.search;
         iconColor = const Color(0xFFE65100);
         break;
-      case 'web_fetch':
+      case 'FetchURL':
         iconData = Icons.public;
         iconColor = const Color(0xFF0277BD);
         break;
-      case 'task':
+      case 'Task':
         iconData = Icons.assignment;
         iconColor = const Color(0xFF6A1B9A);
         break;
-      case 'think':
+      case 'Think':
         iconData = Icons.psychology;
         iconColor = const Color(0xFFAD1457);
         break;
-      case 'mcp':
-        iconData = Icons.extension;
-        iconColor = const Color(0xFF558B2F);
-        break;
       default:
-        iconData = Icons.build;
+        iconData = Icons.extension;
         iconColor = AppTheme.accentColor;
     }
 
@@ -216,27 +216,31 @@ class _ToolCallCardState extends State<ToolCallCard>
   }
 
   String _getToolDisplayName() {
-    switch (widget.toolName.toLowerCase()) {
-      case 'bash':
+    switch (widget.toolName) {
+      case 'Bash':
         return 'Bash 执行';
-      case 'cmd':
+      case 'CMD':
         return 'CMD 执行';
-      case 'file_read':
+      case 'ReadFile':
         return '读取文件';
-      case 'file_write':
+      case 'WriteFile':
         return '写入文件';
-      case 'file_edit':
-        return '编辑文件';
-      case 'web_search':
+      case 'StrReplaceFile':
+        return '字符串替换';
+      case 'PatchFile':
+        return '补丁变更';
+      case 'Glob':
+        return '路径匹配';
+      case 'Grep':
+        return '内容搜索';
+      case 'SearchWeb':
         return 'Web 搜索';
-      case 'web_fetch':
+      case 'FetchURL':
         return '获取网页';
-      case 'task':
+      case 'Task':
         return '任务执行';
-      case 'think':
+      case 'Think':
         return '思考中';
-      case 'mcp':
-        return 'MCP 工具';
       default:
         return widget.toolName;
     }

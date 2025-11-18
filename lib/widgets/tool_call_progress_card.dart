@@ -246,15 +246,27 @@ class ToolCallProgressCard extends StatelessWidget {
   }
 
   IconData _getToolIcon(String toolName) {
-    final lowerName = toolName.toLowerCase();
-    if (lowerName.contains('file')) return Icons.description;
-    if (lowerName.contains('bash') || lowerName.contains('cmd')) {
-      return Icons.terminal;
+    switch (toolName) {
+      case 'Bash':
+      case 'CMD':
+        return Icons.terminal;
+      case 'ReadFile':
+      case 'WriteFile':
+      case 'StrReplaceFile':
+      case 'PatchFile':
+      case 'Glob':
+      case 'Grep':
+        return Icons.description;
+      case 'SearchWeb':
+        return Icons.search;
+      case 'FetchURL':
+        return Icons.public;
+      case 'Task':
+        return Icons.task_alt;
+      case 'Think':
+        return Icons.psychology;
+      default:
+        return Icons.extension;
     }
-    if (lowerName.contains('web') || lowerName.contains('search')) {
-      return Icons.search;
-    }
-    if (lowerName.contains('task')) return Icons.task_alt;
-    return Icons.build;
   }
 }
