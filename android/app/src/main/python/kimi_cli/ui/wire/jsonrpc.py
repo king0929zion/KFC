@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+from pydantic import BaseModel, Field
+try:
+    from pydantic import ConfigDict, TypeAdapter
+except Exception:
+    class ConfigDict(dict):
+        def __init__(self, *args, **kwargs):
+            super().__init__()
+    class TypeAdapter:  # minimal stub for v1
+        def __init__(self, *_args, **_kwargs):
+            pass
 
 JSONRPC_VERSION = "2.0"
 
@@ -38,7 +47,7 @@ class JSONRPCErrorResponse(_ResponseBase):
 
 
 JSONRPCMessage = JSONRPCRequest | JSONRPCSuccessResponse | JSONRPCErrorResponse
-JSONRPC_MESSAGE_ADAPTER = TypeAdapter[JSONRPCMessage](JSONRPCMessage)
+JSONRPC_MESSAGE_ADAPTER = TypeAdapter(JSONRPCMessage) if 'TypeAdapter' in globals() else None
 
 __all__ = [
     "JSONRPCRequest",

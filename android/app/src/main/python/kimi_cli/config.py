@@ -4,7 +4,18 @@ import json
 from pathlib import Path
 from typing import Self
 
-from pydantic import BaseModel, Field, SecretStr, ValidationError, field_serializer, model_validator
+from pydantic import BaseModel, Field, SecretStr, ValidationError
+try:
+    from pydantic import field_serializer, model_validator
+except Exception:
+    def field_serializer(*args, **kwargs):
+        def _decorator(fn):
+            return fn
+        return _decorator
+    def model_validator(*args, **kwargs):
+        def _decorator(fn):
+            return fn
+        return _decorator
 
 from kimi_cli.exception import ConfigError
 from kimi_cli.llm import ModelCapability, ProviderType
@@ -130,7 +141,7 @@ def load_config(config_file: Path | None = None) -> Config:
         config = get_default_config()
         logger.debug("No config file found, creating default config: {config}", config=config)
         with open(config_file, "w", encoding="utf-8") as f:
-            f.write(config.model_dump_json(indent=2, exclude_none=True))
+            f.write(config.json(indent=2, exclude_none=True))
         return config
 
     try:
@@ -154,4 +165,4 @@ def save_config(config: Config, config_file: Path | None = None):
     config_file = config_file or get_config_file()
     logger.debug("Saving config to file: {file}", file=config_file)
     with open(config_file, "w", encoding="utf-8") as f:
-        f.write(config.model_dump_json(indent=2, exclude_none=True))
+        f.write(config.json(indent=2, exclude_none=True))
