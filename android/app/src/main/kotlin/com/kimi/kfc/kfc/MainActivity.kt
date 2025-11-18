@@ -19,7 +19,20 @@ class MainActivity : FlutterActivity() {
                 "initialize" -> {
                     try {
                         initializePython()
-                        result.success(true)
+                        val workDir = call.argument<String>("workDir") ?: ""
+                        val apiKey = call.argument<String>("apiKey") ?: ""
+                        val baseUrl = call.argument<String>("baseUrl") ?: ""
+                        val modelName = call.argument<String>("modelName") ?: ""
+                        val py = Python.getInstance()
+                        val module = py.getModule("kimi_bridge")
+                        val response = module.callAttr(
+                            "initialize",
+                            workDir,
+                            apiKey,
+                            baseUrl,
+                            modelName
+                        )
+                        result.success(response.toString())
                     } catch (e: Exception) {
                         result.error("INIT_ERROR", "Failed to initialize Python: ${e.message}", null)
                     }

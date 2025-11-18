@@ -181,6 +181,7 @@ class ApiConfigScreen extends StatefulWidget {
 class _ApiConfigScreenState extends State<ApiConfigScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _baseUrlController = TextEditingController();
+  final TextEditingController _manualModelController = TextEditingController();
   
   bool _isLoading = true;
   bool _obscureApiKey = true;
@@ -198,6 +199,7 @@ class _ApiConfigScreenState extends State<ApiConfigScreen> {
   void dispose() {
     _apiKeyController.dispose();
     _baseUrlController.dispose();
+    _manualModelController.dispose();
     super.dispose();
   }
 
@@ -271,6 +273,7 @@ class _ApiConfigScreenState extends State<ApiConfigScreen> {
         headers: {
           'Authorization': 'Bearer $apiKey',
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       );
 
@@ -294,7 +297,10 @@ class _ApiConfigScreenState extends State<ApiConfigScreen> {
           _showModelSelectionDialog();
         }
       } else {
-        _showError('获取模型失败: ${response.statusCode}');
+        final snippet = response.body.length > 120
+            ? response.body.substring(0, 120) + '...'
+            : response.body;
+        _showError('获取模型失败: ${response.statusCode}，请确认 Base URL 以 /v1 结尾。\n响应: $snippet');
       }
     } catch (e) {
       _showError('网络请求失败: $e');
@@ -437,6 +443,52 @@ class _ApiConfigScreenState extends State<ApiConfigScreen> {
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                   ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _manualModelController,
+                  decoration: const InputDecoration(
+                    labelText: '手动添加模型',
+                    hintText: '输入模型名，例如 moonshot-v1-8k',
+                    prefixIcon: Icon(Icons.model_training),
+                  ),
+                  onSubmitted: (value) {
+                    final name = value.trim();
+                    if (name.isEmpty) {
+                      _showError('请输入模型名');
+                      return;
+                    }
+                    setState(() {
+                      _selectedModels.add(AiModel(
+                        id: name,
+                        name: name,
+                        description: '手动添加',
+                      ));
+                    });
+                    _manualModelController.clear();
+                    _saveSettings();
+                  },
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final name = _manualModelController.text.trim();
+                    if (name.isEmpty) {
+                      _showError('请输入模型名');
+                      return;
+                    }
+                    setState(() {
+                      _selectedModels.add(AiModel(
+                        id: name,
+                        name: name,
+                        description: '手动添加',
+                      ));
+                    });
+                    _manualModelController.clear();
+                    _saveSettings();
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('添加模型'),
                 ),
                 
                 // 已选择的模型列表

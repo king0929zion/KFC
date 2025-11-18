@@ -533,11 +533,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 // 附件按钮
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 36,
-                  height: 36,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: AppTheme.cardBackground,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: AppTheme.borderColor,
                       width: 1,
@@ -547,7 +547,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: _showAttachmentMenu,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                       child: const Icon(
                         Icons.add_rounded,
                         color: AppTheme.textSecondary,

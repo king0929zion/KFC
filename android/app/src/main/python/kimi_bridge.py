@@ -7,7 +7,7 @@ import asyncio
 import json
 import os
 from pathlib import Path
-from typing import Dict, Any, List, Optional, AsyncGenerator
+from typing import Dict, Any, List, Optional, AsyncGenerator, Callable
 from datetime import datetime
 
 # Import complete kimi-cli (local source code)
@@ -78,7 +78,7 @@ class KimiBridge:
             # 创建 KimiCLI 实例 - 完整保留所有参数
             self._kimi = await KimiCLI.create(
                 session=self._session,
-                yolo=False,  # 需要权限确认
+                yolo=True,  # 自动批准工具调用，支持多轮
                 mcp_configs=[],  # MCP配置稍后从Android传入
                 model_name=model_name or "moonshot-v1-8k",
                 thinking=False,  # 默认不启用思考模式
@@ -218,7 +218,7 @@ class KimiBridge:
             status = self._kimi.soul.status
             return {
                 "initialized": True,
-                "session_id": self._session_id,
+                "session_id": self._session.id if self._session else None,
                 "work_dir": str(self._work_dir),
                 "context_usage": status.context_usage,
                 "model_name": self._kimi.soul.model_name,

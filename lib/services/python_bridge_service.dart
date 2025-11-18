@@ -74,14 +74,33 @@ class PythonBridgeService {
       };
       return;
     }
-    
+
     try {
       if (Platform.isAndroid && _isInitialized) {
-        // TODO: 实现真实的流式输出
-        // 当Chaquopy集成完成后,这里会调用Python的异步生成器
-        yield* _getMockStreamResponse(message);
+        final result = await _channel.invokeMethod<String>(
+          'sendMessage',
+          {
+            'message': message,
+          },
+        );
+        if (result != null) {
+          final decoded = jsonDecode(result) as Map<String, dynamic>;
+          yield {
+            'type': 'done',
+            'content': decoded['content'] ?? '',
+            'timestamp': decoded['timestamp'] ?? DateTime.now().toIso8601String(),
+          };
+          return;
+        }
+        yield {
+          'type': 'error',
+          'content': '无响应',
+        };
       } else {
-        yield* _getMockStreamResponse(message);
+        yield {
+          'type': 'error',
+          'content': '仅支持Android环境',
+        };
       }
     } catch (e) {
       print('发送消息失败: $e');
