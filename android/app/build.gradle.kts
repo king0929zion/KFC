@@ -79,11 +79,11 @@ chaquopy {
         version = "3.13"
         buildPython("python3")
         pip {
-            // 核心依赖包(使用灵活版本以兼容Python 3.12.3)
+            // 核心依赖包(仅使用有预编译wheel的版本,避免需要编译的包)
             install("aiohttp>=3.9.0,<4.0")
             install("aiofiles>=23.0.0")
             install("httpx[socks]>=0.27.0")
-            install("pydantic>=2.0.0,<3.0")
+            install("pydantic==2.9.0")  // 使用较旧版本避免Rust依赖
             install("loguru>=0.7.0")
             install("pyyaml>=6.0.0")
             install("rich>=13.0.0")
@@ -91,9 +91,6 @@ chaquopy {
             install("tenacity>=8.0.0")
             install("pillow>=10.0.0")
             install("prompt-toolkit>=3.0.0")
-            // 可选:如果需要特定功能再添加
-            // install("fastmcp>=2.0.0")
-            // install("trafilatura>=2.0.0")
         }
     }
 }
